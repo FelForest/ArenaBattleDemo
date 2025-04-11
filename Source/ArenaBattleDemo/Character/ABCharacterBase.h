@@ -6,6 +6,14 @@
 #include "GameFramework/Character.h"
 #include "ABCharacterBase.generated.h"
 
+UENUM()
+enum class ECharacterControlType : uint8
+{
+	Shoulder,
+	Quarter,
+};
+
+
 UCLASS()
 class ARENABATTLEDEMO_API AABCharacterBase : public ACharacter
 {
@@ -15,15 +23,10 @@ public:
 	// Sets default values for this character's properties
 	AABCharacterBase();
 
+	virtual void SetCharacterControlData(const class UABCharacterControlData* InCharacterControlData);
+
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere, Category = CharacterControl, meta = (AllowPrivateAccess = "true"))
+	TMap<ECharacterControlType, class UABCharacterControlData*> CharacterControlManager;
 
 };

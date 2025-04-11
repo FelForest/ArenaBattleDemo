@@ -25,9 +25,13 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void SetCharacterControl(ECharacterControlType InNewCharacterControlType);
+	virtual void SetCharacterControlData(const class UABCharacterControlData* InCharacterControlData) override;
 protected:
-	void Move(const  FInputActionValue& Value);
-	void Look(const  FInputActionValue& Value);
+	void ChangeCharacterControl();
+	void ShoulderLook(const  FInputActionValue& Value);
+	void ShoulderMove(const  FInputActionValue& Value);
+	void QuarterMove(const  FInputActionValue& Value);
 	
 	// Camera Section
 protected:
@@ -40,15 +44,21 @@ protected:
 	// Input Section
 protected:
 	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
-	TObjectPtr<class UInputMappingContext> DefaultMappingContext;
+	TObjectPtr<class UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
-	TObjectPtr<class UInputAction> JumpAction;
+	TObjectPtr<class UInputAction> ChangeControlAction;
 	
 	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
-	TObjectPtr<class UInputAction> MoveAction;
+	TObjectPtr<class UInputAction> ShoulderMoveAction;
 
 	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
-	TObjectPtr<class UInputAction> LookAction;
+	TObjectPtr<class UInputAction> ShoulderLookAction;
+
+	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
+	TObjectPtr<class UInputAction> QuarterMoveAction;
+
+	// 현재 사용중인 모드
+	ECharacterControlType CurrentCharacterControlType;
 	
 };
