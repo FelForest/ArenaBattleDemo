@@ -84,12 +84,17 @@ AABCharacterPlayer::AABCharacterPlayer()
 	{
 		ChangeControlAction = ChangeControlActionRef.Object;
 	}
+
+	// 초기 설정
+	CurrentCharacterControlType = ECharacterControlType::Quarter;
 }
 
 void AABCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// 입력 설정
+	SetCharacterControl(CurrentCharacterControlType);
 }
 
 void AABCharacterPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -100,6 +105,7 @@ void AABCharacterPlayer::SetupPlayerInputComponent(class UInputComponent* Player
 
 	//BInding
 	EnhancedInputCompoenent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
+	EnhancedInputCompoenent->BindAction(ChangeControlAction, ETriggerEvent::Started, this, &AABCharacterPlayer::ChangeCharacterControl);
 	EnhancedInputCompoenent->BindAction(ShoulderMoveAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::ShoulderMove);
 	EnhancedInputCompoenent->BindAction(ShoulderLookAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::ShoulderLook);
 	EnhancedInputCompoenent->BindAction(QuarterMoveAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::QuarterMove);
@@ -134,7 +140,15 @@ void AABCharacterPlayer::SetCharacterControl(ECharacterControlType InNewCharacte
 void AABCharacterPlayer::SetCharacterControlData(const class UABCharacterControlData* InCharacterControlData)
 {
 	Super::SetCharacterControlData(InCharacterControlData);
-	
+
+	// SpringArm 관련 설정.
+	SpringArm->TargetArmLength = InCharacterControlData->TargetArmLength;
+	SpringArm->SetRelativeRotation(InCharacterControlData->RelativeRotation);
+	SpringArm->bUsePawnControlRotation = InCharacterControlData->bUsePawnControlRotation;
+	SpringArm->bInheritPitch = InCharacterControlData->bInheritPitch;
+	SpringArm->bInheritYaw = InCharacterControlData->bInheritYaw;
+	SpringArm->bInheritRoll = InCharacterControlData->bInheritRoll;
+	SpringArm->bDoCollisionTest = InCharacterControlData->bDoCollisionTest;
 }
 
 void AABCharacterPlayer::ChangeCharacterControl()
@@ -142,11 +156,11 @@ void AABCharacterPlayer::ChangeCharacterControl()
 	// 사용할 캐릭터 컨트롤을 변경하는 함수
 	if (CurrentCharacterControlType == ECharacterControlType::Quarter)
 	{
-		SetCharacterControl(ECharacterControlType::Quarter);
+		SetCharacterControl(ECharacterControlType::Shoulder);
 	}
 	else if (CurrentCharacterControlType == ECharacterControlType::Shoulder)
 	{
-		SetCharacterControl(ECharacterControlType::Shoulder);
+		SetCharacterControl(ECharacterControlType::Quarter);
 	}
 }
 
@@ -169,6 +183,32 @@ void AABCharacterPlayer::ShoulderMove(const FInputActionValue& Value)
 
 void AABCharacterPlayer::QuarterMove(const FInputActionValue& Value)
 {
+	// 입력 값 읽기.
+	FVector2D Movement = Value.Get<FVector2D>();
+
+	float MovementVectorSize = 1.0f;
+	float MovementVectorSizeSquared = Movement.SizeSquared();
+
+	// 두 방향으로 입력이 들어오면, 이동 방향은 정규화해 크기를 1로 만들고,
+	// 입력 스케일을 1로 강제 설정.
+	if (MovementVectorSizeSquared > 1.0f)
+	{
+		Movement.Normalize();
+		MovementVectorSize = 1.0f;
+	}
+	// 입력이 1이하이면, 해당 입력을 스케일로 사용하기 위해 값 계산.
+	else
+	{
+		MovementVectorSize = FMath::Sqrt(MovementVectorSizeSquared);
+	}
+
+	FVector MoveDirection = FVector(Movement.X, Movement.Y, 0.0f);
+
+	// 캐릭터가 이동하는 방향에 맞게 컨트롤러 회전 설정
+	Controller->SetControlRotation(FRotationMatrix::MakeFromX(MoveDirection).Rotator());
+	
+	// 입력에 따른 방향으로 이동하도록 입력 전달.
+	AddMovementInput(MoveDirection, MovementVectorSize);
 }
 
 
