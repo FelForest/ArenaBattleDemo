@@ -85,6 +85,12 @@ AABCharacterPlayer::AABCharacterPlayer()
 		ChangeControlAction = ChangeControlActionRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> AttackActionRef = TEXT("/Game/ArenaBattle/Input/Actions/IA_Attack.IA_Attack");
+	if (AttackActionRef.Object != nullptr)
+	{
+		AttackAction = AttackActionRef.Object;
+	}
+
 	// 초기 설정
 	CurrentCharacterControlType = ECharacterControlType::Quarter;
 }
@@ -106,6 +112,7 @@ void AABCharacterPlayer::SetupPlayerInputComponent(class UInputComponent* Player
 	//BInding
 	EnhancedInputCompoenent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 	EnhancedInputCompoenent->BindAction(ChangeControlAction, ETriggerEvent::Started, this, &AABCharacterPlayer::ChangeCharacterControl);
+	EnhancedInputCompoenent->BindAction(AttackAction, ETriggerEvent::Started, this, &AABCharacterPlayer::Attack);
 	EnhancedInputCompoenent->BindAction(ShoulderMoveAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::ShoulderMove);
 	EnhancedInputCompoenent->BindAction(ShoulderLookAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::ShoulderLook);
 	EnhancedInputCompoenent->BindAction(QuarterMoveAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::QuarterMove);
@@ -209,6 +216,12 @@ void AABCharacterPlayer::QuarterMove(const FInputActionValue& Value)
 	
 	// 입력에 따른 방향으로 이동하도록 입력 전달.
 	AddMovementInput(MoveDirection, MovementVectorSize);
+}
+
+void AABCharacterPlayer::Attack()
+{
+	// 공격 입력 처리 함수 호출
+	ProcessComboCommand();
 }
 
 

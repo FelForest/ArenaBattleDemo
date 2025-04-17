@@ -32,7 +32,8 @@ protected:
 	void ShoulderLook(const  FInputActionValue& Value);
 	void ShoulderMove(const  FInputActionValue& Value);
 	void QuarterMove(const  FInputActionValue& Value);
-	
+	void Attack();
+
 	// Camera Section
 protected:
 	UPROPERTY(VisibleAnywhere, BLueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "ture"))
@@ -48,6 +49,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
 	TObjectPtr<class UInputAction> ChangeControlAction;
+
+	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
+	TObjectPtr<class UInputAction> AttackAction;
 	
 	UPROPERTY(EditAnywhere, BLueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "ture"))
 	TObjectPtr<class UInputAction> ShoulderMoveAction;
