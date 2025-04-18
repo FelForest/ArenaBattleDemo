@@ -6,8 +6,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Character/ABComboActionData.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
+#include "CharacterStat/ABCharacterStatComponent.h"
+#include "UI/ABWidgetComponent.h"
+#include "UI/ABUserWidget.h"
+
 #include "Physics/ABCollision.h"
 #include "Engine/DamageEvents.h"
+
+
 
 // Sets default values
 AABCharacterBase::AABCharacterBase()
@@ -82,6 +89,31 @@ AABCharacterBase::AABCharacterBase()
 	if (DeadMontageRef.Object != nullptr)
 	{
 		DeadMontage = DeadMontageRef.Object;
+	}
+
+	// stat Component
+	Stat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("Stat"));
+
+	//
+	HP = CreateDefaultSubobject<UABWidgetComponent>(TEXT("Widget"));
+	HP->SetupAttachment(GetMesh());
+	HP->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
+
+	// 사용할 위젯 클래스 정보 설정
+	static ConstructorHelpers::FClassFinder<UABUserWidget> HpBarWidgetRef(TEXT("/Game/ArenaBattle/UI/WBP_HpBar.WBP_HpBar_C"));
+	if (HpBarWidgetRef.Class)
+	{
+		// 위젯 컴포넌트는 위젯의 클래스 정보를 바탕으로 자체적으로 인스턴스를 생성함
+		HP->SetWidgetClass(HpBarWidgetRef.Class);
+
+		// 2D 모드로 그리기
+		HP->SetWidgetSpace(EWidgetSpace::Screen);
+
+		// 크기 설정
+		HP->SetDrawSize(FVector2D(150.0f, 15.0f));
+
+		// 콜리전 끄기
+		HP->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
 

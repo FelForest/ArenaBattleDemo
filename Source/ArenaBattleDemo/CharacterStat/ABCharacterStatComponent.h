@@ -7,6 +7,13 @@
 #include "ABCharacterStatComponent.generated.h"
 
 
+// 델리게이트 선언
+// 체력 값이 0이 되었을 때 발행할 델리게이트.
+DECLARE_MULTICAST_DELEGATE(FOnHpZeroDelegate);
+
+// 체력 변경이 발생할 때 발행할 델리게이트.
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedDelegate, float /*CurrentHP*/);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ARENABATTLEDEMO_API UABCharacterStatComponent : public UActorComponent
 {
@@ -26,6 +33,17 @@ public:
 	FORCEINLINE float GetCurrentHP() { return CurrentHP; }
 
 	float ApplyDamage(float InDamage);
+
+protected:
+	// HP가 변경 됐을 때 실행할 함수
+	void SetHP(float NewHP);
+
+public:
+	// 체력을 모두 소진했을 때 발행되는 델리게이트
+	FOnHpZeroDelegate OnHpZero;
+
+	// 체력 변경 델리게이트
+	FOnHpChangedDelegate OnHpChanged;
 
 	// 스탯
 protected:
