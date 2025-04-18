@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interface/ABAnimationAttackInterface.h"
+#include "Interface/ABCharacterWidgetInterface.h"
 #include "ABCharacterBase.generated.h"
 
 UENUM()
@@ -16,7 +17,7 @@ enum class ECharacterControlType : uint8
 
 
 UCLASS()
-class ARENABATTLEDEMO_API AABCharacterBase : public ACharacter, public IABAnimationAttackInterface
+class ARENABATTLEDEMO_API AABCharacterBase : public ACharacter, public IABAnimationAttackInterface, public IABCharacterWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -28,11 +29,15 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void SetupCharacterWidget(class UUserWidget* InUserWidget) override;
 	// 공격 감지 함수 (애님 노티파이로부터 호출됨)
 	virtual void AttackHitCheck() override;
 
 	// 데미지 처리함수
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser);
+
+	// 컴포넌트가 초기화된 이후에 호출되는 함수
+	virtual void PostInitializeComponents() override;
 
 protected:
 	// 콤보 액션 처리 함수

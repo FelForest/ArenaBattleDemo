@@ -10,6 +10,7 @@
 #include "CharacterStat/ABCharacterStatComponent.h"
 #include "UI/ABWidgetComponent.h"
 #include "UI/ABUserWidget.h"
+#include "UI/ABHpBarWidget.h"
 
 #include "Physics/ABCollision.h"
 #include "Engine/DamageEvents.h"
@@ -135,6 +136,20 @@ void AABCharacterBase::BeginPlay()
 	ensure(ComboActionData != nullptr);
 }
 
+void AABCharacterBase::SetupCharacterWidget(UUserWidget* InUserWidget)
+{
+	// 필요한 위젯 정보 가져오기
+	UABHpBarWidget* HpBarWidget = Cast <UABHpBarWidget>(InUserWidget);
+	if (HpBarWidget != nullptr)
+	{
+		HpBarWidget->SetMaxHP(Stat->GetMaxHP());
+
+		HpBarWidget->UpdateHpBar(Stat->GetCurrentHP());
+
+		Stat->OnHpChanged.AddUObject(HpBarWidget, &UABHpBarWidget::UpdateHpBar);
+	}
+}
+
 void AABCharacterBase::AttackHitCheck()
 {
 	// 공격 판정 확인
@@ -197,10 +212,18 @@ float AABCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	// 맞으면 바로 죽도록 처리
-	SetDead();
+	// 스텟 정보가 업데이트 되도록 데미지 전달
+	Stat->ApplyDamage(DamageAmount);
 
 	return DamageAmount;
+}
+
+void AABCharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// 죽었을 때 발행되는 이벤트에 SetDead 함수 등록
+	Stat->OnHpZero.AddUObject(this, &AABCharacterBase::SetDead);
 }
 
 void AABCharacterBase::ProcessComboCommand()
@@ -329,6 +352,9 @@ void AABCharacterBase::SetDead()
 
 	// 죽는 애니메이션 재생
 	PlayDeadAnimation();
+
+	// 죽었을 때 HPBar(위젯) 사라지도록 처리
+	HP->SetHiddenInGame(true);
 }
 
 void AABCharacterBase::PlayDeadAnimation()
