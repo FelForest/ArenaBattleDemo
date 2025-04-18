@@ -23,5 +23,4 @@ void AABCharacterNonPlayer::SetDead()
 		DeadEventDelayTime,
 		false
 		);
-
 }

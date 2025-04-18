@@ -16,36 +16,6 @@
 
 AABCharacterPlayer::AABCharacterPlayer()
 {
-	// 컨트롤러의 회전을 받아서 설정하는 모드를 모두 해제
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
-
-	// 무드번트 설정
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
-	GetCharacterMovement()->JumpZVelocity = 800.0f;
-	
-	// 컴포넌트 설정
-	GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
-
-	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f,0.0f,-88.0f), FRotator(0.0f, -90.0f, 0.0f));
-	// 리소스 설정
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
-
-	// 스캘레탈 메시 설정
-	if (CharacterMesh.Object != nullptr)
-	{
-		GetMesh()->SetSkeletalMesh(CharacterMesh.Object);
-	}
-
-	// 애니메이션 인스턴스 설정
-	static ConstructorHelpers::FClassFinder<UAnimInstance> CharacterAnim(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny_C"));
-	if (CharacterAnim.Class != nullptr)
-	{
-		GetMesh()->SetAnimClass((CharacterAnim.Class));
-	}
-
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
 	SpringArm->TargetArmLength = 500.0f;
