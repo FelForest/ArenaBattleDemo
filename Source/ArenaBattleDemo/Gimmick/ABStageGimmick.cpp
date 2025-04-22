@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "Physics/ABCollision.h"
+#include "Character/ABCharacterNonPlayer.h"
 
 // Sets default values
 AABStageGimmick::AABStageGimmick()
@@ -14,7 +15,7 @@ AABStageGimmick::AABStageGimmick()
 	RootComponent = Stage;
 
 	// 리소스 설정
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StageMeshRef(TEXT("/ Game / ArenaBattle / Environment / Stages / SM_SQUARE.SM_SQUARE"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StageMeshRef(TEXT("/Game/ArenaBattle/Environment/Stages/SM_SQUARE.SM_SQUARE"));
 	if (StageMeshRef.Object)
 	{
 		Stage->SetStaticMesh(StageMeshRef.Object);
@@ -31,7 +32,7 @@ AABStageGimmick::AABStageGimmick()
 	static FName GateSockets[] = { TEXT("+XGate"), TEXT("-XGate") , TEXT("+YGate") ,TEXT("-YGate") };
 	
 	// resource setting
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> GateMeshRef(TEXT(""));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> GateMeshRef(TEXT("/Game/ArenaBattle/Environment/Props/SM_GATE.SM_GATE"));
 
 	for (const FName& GateSocket : GateSockets)
 	{
@@ -73,6 +74,37 @@ AABStageGimmick::AABStageGimmick()
 
 	}
 
+	// 시작할 때는 준비 상태로 설정
+	CurrentState = EStageState::Ready;
+
+	//  열거형 - 델리게이트 맵 설정
+	StageChangedActions.Add(EStageState::Ready, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetReady));
+	StageChangedActions.Add(EStageState::Fight, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetFight));
+	StageChangedActions.Add(EStageState::Reward, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetChooseReward));
+	StageChangedActions.Add(EStageState::Next, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetChooseNext));
+
+
+
+}
+
+void AABStageGimmick::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	// OnConstruction이 호출될 때 상태 값도 갱싱되도록 처리
+	SetState(CurrentState);
+}
+
+void AABStageGimmick::SetState(EStageState InNewState)
+{
+	// 현재 상태 업데이트
+	CurrentState = InNewState;
+
+	// 전달된 상태에 맵에 포함돼 있으면 델리게이트 실행
+	if (StageChangedActions.Contains(InNewState))
+	{
+		StageChangedActions[CurrentState].StageChangedDelegate.ExecuteIfBound();
+	}
 }
 
 void AABStageGimmick::OnStageTriggerBeginOverlap(
@@ -83,9 +115,153 @@ void AABStageGimmick::OnStageTriggerBeginOverlap(
 	bool bFromSweep, 
 	const FHitResult& SweepResult)
 {
+	// 캐릭터가 스테이지에 입장하면 대전 상태로 전환
+	SetState(EStageState::Fight);
+}
 
+void AABStageGimmick::SetReady()
+{
+	// 가운데 트리거 활성화
+	StageTrigger->SetCollisionProfileName(CPROFILE_ABTRIGGER);
+
+	// 플레이어가 게이트와 상화작용하지 않도록 콜리전 끄기
+	for (const auto& GateTrigger : GateTriggers)
+	{
+		GateTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+	}
+
+	// 준비 상태일 때는 문이 열려있도록 설정
+	OpenAllGates();
+}
+
+void AABStageGimmick::SetFight()
+{
+	// 가운데 트리거 활성화
+	StageTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+
+	// 플레이어가 게이트와 상화작용하지 않도록 콜리전 끄기
+	for (const auto& GateTrigger : GateTriggers)
+	{
+		GateTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+	}
+
+	// 모든 문 닫기
+	CloseAllGates();
+}
+
+void AABStageGimmick::SetChooseReward()
+{
+	// 가운데 트리거 활성화
+	StageTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+
+	// 플레이어가 게이트와 상화작용하지 않도록 콜리전 끄기
+	for (const auto& GateTrigger : GateTriggers)
+	{
+		GateTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+	}
+
+	// 아이템 생성 로직
+	
+	// 모든 문 닫기
+	CloseAllGates();
+}
+
+void AABStageGimmick::SetChooseNext()
+{
+	// 가운데 트리거 활성화
+	StageTrigger->SetCollisionProfileName(TEXT("NoCollision"));
+
+	// 플레이어가 게이트와 상화작용하지 않도록 콜리전 끄기
+	for (const auto& GateTrigger : GateTriggers)
+	{
+		GateTrigger->SetCollisionProfileName(CPROFILE_ABTRIGGER);
+	}
+
+	// 모든 문 닫기
+	OpenAllGates();
 }
 
 void AABStageGimmick::OnGateTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	// 게이트에는 하나의 태그를 설정했기 때문에 이를 확인.
+	ensure(OverlappedComponent->ComponentTags.Num() == 1);
+
+	// 태그 확인 (예: +XGate)
+	FName ComponentTag = OverlappedComponent->ComponentTags[0];
+
+	// 태그에서 스테이지를 배치할 소켓의 이름을 가져오기.
+	FName SocketName = FName(*ComponentTag.ToString().Left(2));
+
+	// 소켓이 있는지 확인.
+	check(Stage->DoesSocketExist(SocketName));
+
+	// 소켓 이름을 통해 위치 값 가져오기.
+	FVector NewLocation = Stage->GetSocketLocation(SocketName);
+
+	// 가져온 위치에 이미 다른 스테이지가 없는지 확인.
+	TArray<FOverlapResult> OverlapResults;
+
+	FCollisionQueryParams CollisionQueryParams(
+		SCENE_QUERY_STAT(GateTrigger),
+		false,
+		this
+	);
+
+	// 오버랩으로 검사.
+	bool Result = GetWorld()->OverlapMultiByObjectType(
+		OverlapResults,        // 충돌 결과를 반환할 변수.
+		NewLocation,        // 충돌 판정할 위치.
+		FQuat::Identity,    // 회전.
+		// 충돌 대상 오브젝트 채널.
+		FCollisionObjectQueryParams::InitType::AllStaticObjects,
+		// 충돌 판정할 때 사용할 모형.
+		FCollisionShape::MakeSphere(775.0f),
+		// 콜리전 옵션(자기는 제외하기 위해).
+		CollisionQueryParams
+	);
+
+	if (!Result)
+	{
+		GetWorld()->SpawnActor<AABStageGimmick>(NewLocation, FRotator::ZeroRotator);
+	}
+}
+
+void AABStageGimmick::OpenAllGates()
+{
+	// 문 액터의 배열을 순회하면서 회전 설정
+	for (const auto& Gate : Gates)
+	{
+		Gate.Value->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	}
+}
+
+void AABStageGimmick::CloseAllGates()
+{
+	// 문 액터의 배열을 순회하면서 회전 설정
+	for (const auto& Gate : Gates)
+	{
+		Gate.Value->SetRelativeRotation(FRotator::ZeroRotator);
+	}
+}
+
+void AABStageGimmick::OpponentDestroyed(AActor* DestroyedActor)
+{
+	// NPC가 죽으면 보상 단계로 설정
+	SetState(EStageState::Reward);
+}
+
+void AABStageGimmick::OpponentSpawn()
+{
+	// NPC를 생성할 위치 설정
+	const FVector SpawnLocation = GetActorLocation() + FVector::UpVector * 88.0f;
+	// NPC 생성
+	AActor* OpponentActor = GetWorld()->SpawnActor(OpponentClass, &SpawnLocation, &FRotator::ZeroRotator);
+
+	// NPC가 죽었을때 발행되는 델리게이트에 등록
+	AABCharacterNonPlayer* ABOpponentCharacter = Cast<AABCharacterNonPlayer>(OpponentActor);
+
+	if (ABOpponentCharacter != nullptr)
+	{
+		ABOpponentCharacter->OnDestroyed.AddDynamic(this, &AABStageGimmick::OpponentDestroyed);
+	}
 }
