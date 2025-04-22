@@ -6,7 +6,11 @@
 #include "GameFramework/Character.h"
 #include "Interface/ABAnimationAttackInterface.h"
 #include "Interface/ABCharacterWidgetInterface.h"
+#include "Interface/ABCHaracterItemInterface.h"
 #include "ABCharacterBase.generated.h"
+
+// 로그 카테고리 추가
+DECLARE_LOG_CATEGORY_EXTERN(LogABCharacter, Log, All);
 
 UENUM()
 enum class ECharacterControlType : uint8
@@ -15,9 +19,29 @@ enum class ECharacterControlType : uint8
 	Quarter,
 };
 
+// 아이템 획득 처리를 위한 델리게이트 선언
+DECLARE_DELEGATE_OneParam(FOnTakeItemDelegate, class UABItemData* /*InItemData*/);
+
+// 델리게이트를 다수의 배열(맵)로 관리하기 위한 구조체 선언
+// 델리게이트 자체를 인자로 사용할 수 없기 때문에 래퍼 구조체 선언이 필요함
+USTRUCT(BlueprintType)
+struct FTakeItemDelegateWrapper
+{
+	GENERATED_BODY()
+
+	FTakeItemDelegateWrapper() {}
+	FTakeItemDelegateWrapper(const FOnTakeItemDelegate& InItemDelegate)
+		: ItemDelegate(InItemDelegate) {}
+
+	FOnTakeItemDelegate ItemDelegate;
+};
 
 UCLASS()
-class ARENABATTLEDEMO_API AABCharacterBase : public ACharacter, public IABAnimationAttackInterface, public IABCharacterWidgetInterface
+class ARENABATTLEDEMO_API AABCharacterBase : 
+	public ACharacter, 
+	public IABAnimationAttackInterface, 
+	public IABCharacterWidgetInterface, 
+	public IABCharacterItemInterface
 {
 	GENERATED_BODY()
 
@@ -103,4 +127,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Widget, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UABWidgetComponent> HP;
 
+	// Item Section
+protected:
+	// 래퍼 구조체를 관리할 수 있는 배열
+	UPROPERTY()
+	TArray<FTakeItemDelegateWrapper> TakeItemActions;
+
+	// 아이템 획득 시 호출될 함수
+	virtual void TakeItem(UABItemData* InItemData) override;
+
+	// 아이템 종류마다 처리될 함수 선언
+	virtual void DrinkPortion(class UABItemData* InItemData);
+	virtual void EquipWeapon(class UABItemData* InItemData);
+	virtual void ReadScroll(class UABItemData* InItemData);
+
+	// 무기 아이템을 획득했을 때 사용할 스켈레탈 메시 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Equipment, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class USkeletalMeshComponent> Weapon;
 };

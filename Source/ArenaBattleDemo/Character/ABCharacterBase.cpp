@@ -11,11 +11,15 @@
 #include "UI/ABWidgetComponent.h"
 #include "UI/ABUserWidget.h"
 #include "UI/ABHpBarWidget.h"
+#include "Item/ABWeaponItemData.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "Physics/ABCollision.h"
 #include "Engine/DamageEvents.h"
 
 
+// Define Log Category
+DEFINE_LOG_CATEGORY(LogABCharacter);
 
 // Sets default values
 AABCharacterBase::AABCharacterBase()
@@ -116,6 +120,17 @@ AABCharacterBase::AABCharacterBase()
 		// 콜리전 끄기
 		HP->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+
+	// Item Secion
+	TakeItemActions.Add(FTakeItemDelegateWrapper(FOnTakeItemDelegate::CreateUObject(this, &AABCharacterBase::EquipWeapon)));
+	TakeItemActions.Add(FTakeItemDelegateWrapper(FOnTakeItemDelegate::CreateUObject(this, &AABCharacterBase::DrinkPortion)));
+	TakeItemActions.Add(FTakeItemDelegateWrapper(FOnTakeItemDelegate::CreateUObject(this, &AABCharacterBase::ReadScroll)));
+
+	// 무기를 보여줄 컴포넌트 생성
+	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
+
+	// 메시 컴포넌트 하위로 계층을 설정하고, 이때 hand_rSocket 소켓에 부착
+	Weapon->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 }
 
 void AABCharacterBase::SetCharacterControlData(const class UABCharacterControlData* InCharacterControlData)
@@ -223,6 +238,7 @@ void AABCharacterBase::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	// 죽었을 때 발행되는 이벤트에 SetDead 함수 등록
+	// BeginPlay에서 하지 않은이유
 	Stat->OnHpZero.AddUObject(this, &AABCharacterBase::SetDead);
 }
 
@@ -371,3 +387,51 @@ void AABCharacterBase::PlayDeadAnimation()
 		AnimInstance->Montage_Play(DeadMontage, PlayRate);
 	}
 }
+
+void AABCharacterBase::TakeItem(UABItemData* InItemData)
+{
+	/*switch (InItemData->Type)
+	{
+	case EItemType::Weapon:
+	{
+
+	}
+	break;
+	}*/
+
+	if (InItemData)
+	{
+		TakeItemActions[static_cast<uint8>(InItemData->Type)].ItemDelegate.ExecuteIfBound(InItemData);
+	}
+}
+
+void AABCharacterBase::DrinkPortion(UABItemData* InItemData)
+{
+	UE_LOG(LogABCharacter, Log, TEXT("Drink Portion"));
+}
+
+void AABCharacterBase::EquipWeapon(UABItemData* InItemData)
+{
+	//UE_LOG(LogABCharacter, Log, TEXT("Equip Weapon"));
+	// 함수에 전달된 아이템 데이터 에셋을 무기 데이터로 변환
+	UABWeaponItemData* WeaponItemData = Cast<UABWeaponItemData>(InItemData);
+	if (WeaponItemData != nullptr)
+	{
+		// 무기 메시가 아직 로딩 안도니 경우 로드 처리
+		if (WeaponItemData->WeaponMesh.IsPending())
+		{
+			// 아직 로드가 안된거임
+			// 이거 동기로 하는 거임
+			WeaponItemData->WeaponMesh.LoadSynchronous();
+		}
+		// 무기 컴포넌트에 로드가 완료된 스켈레탈 메시 설정
+		Weapon->SetSkeletalMesh(WeaponItemData->WeaponMesh.Get());
+	}
+}
+
+void AABCharacterBase::ReadScroll(UABItemData* InItemData)
+{
+	UE_LOG(LogABCharacter, Log, TEXT("Read Scroll"));
+}
+
+
