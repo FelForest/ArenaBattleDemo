@@ -78,7 +78,8 @@ AABStageGimmick::AABStageGimmick()
 	// 시작할 때는 준비 상태로 설정
 	CurrentState = EStageState::Ready;
 
-	//  열거형 - 델리게이트 맵 설정
+	// 열거형 - 델리게이트 맵 설정
+	// 이거 암묵적 형변환이 됨 -> 구조체 생성자중에 델리게이트를 인자로 받는 생성자가 있어서 가능
 	StageChangedActions.Add(EStageState::Ready, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetReady));
 	StageChangedActions.Add(EStageState::Fight, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetFight));
 	StageChangedActions.Add(EStageState::Reward, FOnStageChangedDelegate::CreateUObject(this, &AABStageGimmick::SetChooseReward));
