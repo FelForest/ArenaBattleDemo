@@ -25,7 +25,7 @@ AABItemBox::AABItemBox()
 
 	// 콜리전 프로파일 설정
 	Trigger->SetCollisionProfileName(CPROFILE_ABTRIGGER);
-	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AABItemBox::OnOverlapBegin);
+	//Trigger->OnComponentBeginOverlap.AddDynamic(this, &AABItemBox::OnOverlapBegin);
 
 	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
 
@@ -85,6 +85,9 @@ void AABItemBox::PostInitializeComponents()
 
 	// 제대로 설정 됐는지 확인
 	ensure(Item != nullptr);
+
+	// 트리거가 발생하는 다이나믹 델리게이트에 함수 등록
+	Trigger->OnComponentBeginOverlap.AddDynamic(this, &AABItemBox::OnOverlapBegin);
 
 }
 
