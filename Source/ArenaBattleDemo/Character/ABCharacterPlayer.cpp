@@ -71,8 +71,27 @@ void AABCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		// 입력 활성화
+		EnableInput(PlayerController);
+	}
+
 	// 입력 설정
 	SetCharacterControl(CurrentCharacterControlType);
+}
+
+void AABCharacterPlayer::SetDead()
+{
+	Super::SetDead();
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		// 입력 비활성화
+		DisableInput(PlayerController);
+	}
 }
 
 void AABCharacterPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -209,6 +228,7 @@ void AABCharacterPlayer::SetUpHUDWidget(UABHUDWidget* InHUDWidget)
 	// HP 정보 전달
 	InHUDWidget->UpdateHpBar(Stat->GetCurrentHP());
 
+	UE_LOG(LogTemp, Warning, TEXT("세팅됨"));
 	// 델리게이트에 등록.
 	Stat->OnStatChanged.AddUObject(InHUDWidget, &UABHUDWidget::UpdateStat);
 	Stat->OnHpChanged.AddUObject(InHUDWidget, &UABHUDWidget::UpdateHpBar);

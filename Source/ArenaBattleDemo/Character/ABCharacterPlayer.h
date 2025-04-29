@@ -25,6 +25,9 @@ public:
 	AABCharacterPlayer();
 	virtual void BeginPlay() override;
 
+	// 플레이어가
+	virtual void SetDead() override;
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

@@ -16,6 +16,8 @@ class ARENABATTLEDEMO_API UABWeaponItemData : public UABItemData
 	GENERATED_BODY()
 
 public:
+
+	UABWeaponItemData();
 	// FPrimaryAssetId 값을 반환하는 GetPrimaryAssetId 함수 오버라이드
 	// 첫번째 인자 : 태그값.
 	// 두번째 인자 : 이름값, 일반적으로 GetFname()을 많이 활용함

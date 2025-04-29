@@ -28,7 +28,7 @@ protected:
 	virtual void NativeConstruct() override;
 
 	// HPBar 위젯
-	TObjectPtr<class UABHpBarWidget> HPBar;
+	TObjectPtr<class UABHpBarWidget> HpBar;
 
 	// CharacterStat 위젯
 	TObjectPtr<class UABCharacterStatWidget> CharacterStat;

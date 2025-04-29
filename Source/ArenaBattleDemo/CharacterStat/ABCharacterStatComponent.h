@@ -18,12 +18,12 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedDelegate, float /*CurrentHP*/);
 // 스탯 정보 변경이 발생할 때 발행할 델리게이트
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStatChangedDelegate, const FABCharacterStat&, const FABCharacterStat&);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ARENABATTLEDEMO_API UABCharacterStatComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UABCharacterStatComponent();
 
@@ -31,10 +31,14 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Getter
 	//FORCEINLINE float GetMaxHP() { return MaxHP; }
 	FORCEINLINE float GetCurrentHP() { return CurrentHP; }
+	FORCEINLINE void HealHp(float InHealAmount)
+	{
+		CurrentHP = FMath::Clamp(CurrentHP + InHealAmount, 0, GetTotalStat().MaxHp);
+	}
 
 	FORCEINLINE float GetAttackRadius() const { return AttackRadius; };
 
@@ -52,6 +56,12 @@ public:
 	FORCEINLINE void SetBaseStat(const FABCharacterStat& InBaseStat)
 	{
 		BaseStat = InBaseStat;
+		OnStatChanged.Broadcast(BaseStat, ModifierStat);
+	}
+
+	FORCEINLINE void AddBaseStat(const FABCharacterStat& InAddBaseStat)
+	{
+		BaseStat = BaseStat + InAddBaseStat; 
 		OnStatChanged.Broadcast(BaseStat, ModifierStat);
 	}
 

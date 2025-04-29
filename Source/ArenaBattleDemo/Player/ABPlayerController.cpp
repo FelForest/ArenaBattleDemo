@@ -23,6 +23,7 @@ void AABPlayerController::BeginPlay()
 	FInputModeGameOnly GameInput;
 	SetInputMode(GameInput);
 
+	// 이것 보장해줘야 하는거 아닌가
 	// 위젯 생성
 	ABHUDWidget = CreateWidget<UABHUDWidget>(this, ABHUDwidgetClass);
 

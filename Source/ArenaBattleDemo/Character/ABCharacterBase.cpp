@@ -11,7 +11,7 @@
 #include "UI/ABWidgetComponent.h"
 #include "UI/ABUserWidget.h"
 #include "UI/ABHpBarWidget.h"
-#include "Item/ABWeaponItemData.h"
+#include "Item/ABItems.h"
 #include "Components/SkeletalMeshComponent.h"
 
 #include "Physics/ABCollision.h"
@@ -241,6 +241,9 @@ void AABCharacterBase::PostInitializeComponents()
 	// 죽었을 때 발행되는 이벤트에 SetDead 함수 등록
 	// BeginPlay에서 하지 않은이유
 	Stat->OnHpZero.AddUObject(this, &AABCharacterBase::SetDead);
+
+	// 스탯이 변경됐을 때 발행되는 이벤트에 함수 등록
+	Stat->OnStatChanged.AddUObject(this, &AABCharacterBase::ApplyStat);
 }
 
 void AABCharacterBase::ProcessComboCommand()
@@ -417,7 +420,14 @@ void AABCharacterBase::TakeItem(UABItemData* InItemData)
 
 void AABCharacterBase::DrinkPortion(UABItemData* InItemData)
 {
-	UE_LOG(LogABCharacter, Log, TEXT("Drink Portion"));
+	//UE_LOG(LogABCharacter, Log, TEXT("Drink Portion"));
+	UABPotionItemData* PotionItemData = Cast<UABPotionItemData>(InItemData);
+	if (PotionItemData == nullptr)
+	{
+		return;
+	}
+
+	Stat->HealHp(PotionItemData->HealAmount);
 }
 
 void AABCharacterBase::EquipWeapon(UABItemData* InItemData)
@@ -444,7 +454,17 @@ void AABCharacterBase::EquipWeapon(UABItemData* InItemData)
 
 void AABCharacterBase::ReadScroll(UABItemData* InItemData)
 {
-	UE_LOG(LogABCharacter, Log, TEXT("Read Scroll"));
+	//UE_LOG(LogABCharacter, Log, TEXT("Read Scroll"));
+
+	// 아이템 수집 처리를 위한 형변환
+	UABScrollItemData* ScrollItemData = Cast<UABScrollItemData>(InItemData);
+
+	if (ScrollItemData == nullptr)
+	{
+		return;
+	}
+
+	Stat->AddBaseStat(ScrollItemData->BaseStat);
 }
 
 int32 AABCharacterBase::GetLevel() const
@@ -455,6 +475,15 @@ int32 AABCharacterBase::GetLevel() const
 void AABCharacterBase::SetLevel(int32 InNewLevel)
 {
 	Stat->SetLevelStat(InNewLevel);
+}
+
+void AABCharacterBase::ApplyStat(const FABCharacterStat& BaseStat, const FABCharacterStat& ModifierStat)
+{
+	// 스탯 데이터에서 최종 이동 속력 구하기
+	float MovementSpeed = (BaseStat + ModifierStat).MovementSpeed;
+
+	// 컴포넌트에 속력 설정
+	GetCharacterMovement()->MaxWalkSpeed = MovementSpeed;
 }
 
 

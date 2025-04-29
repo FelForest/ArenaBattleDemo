@@ -15,7 +15,7 @@ void UABHUDWidget::UpdateStat(const FABCharacterStat& BaseStat, const FABCharact
 {
 	// HpBar의 최대 체력 스탯 설정.
 	FABCharacterStat TotalStat = (BaseStat + ModifierStat);
-	UpdateHpBar(TotalStat.MaxHp);
+	HpBar->SetMaxHP(TotalStat.MaxHp);
 
 	// 캐릭터 스탯에 새로운 데이터 전달.
 	CharacterStat->UpdateStat(BaseStat, ModifierStat);
@@ -23,7 +23,7 @@ void UABHUDWidget::UpdateStat(const FABCharacterStat& BaseStat, const FABCharact
 
 void UABHUDWidget::UpdateHpBar(float NewCurrentHp)
 {
-	HPBar->UpdateHpBar(NewCurrentHp);
+	HpBar->UpdateHpBar(NewCurrentHp);
 }
 
 void UABHUDWidget::NativeConstruct()
@@ -31,8 +31,8 @@ void UABHUDWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	// 이름으로 검색해 HPBar 위젯 설정
-	HPBar = Cast<UABHpBarWidget>(GetWidgetFromName(TEXT("WidgetHPBar")));
-	ensure(HPBar != nullptr);
+	HpBar = Cast<UABHpBarWidget>(GetWidgetFromName(TEXT("WidgetHpBar")));
+	ensure(HpBar != nullptr);
 
 	// 이름으로 CharacterStat 위젯 설정
 	CharacterStat = Cast<UABCharacterStatWidget>(GetWidgetFromName(TEXT("WidgetCharacterStat")));
@@ -40,4 +40,8 @@ void UABHUDWidget::NativeConstruct()
 	
 	IABCharacterHUDInterface* HUDPawn = Cast<IABCharacterHUDInterface>(GetOwningPlayer()->GetPawn());
 
+	if (HUDPawn)
+	{
+		HUDPawn->SetUpHUDWidget(this);
+	}
 }
