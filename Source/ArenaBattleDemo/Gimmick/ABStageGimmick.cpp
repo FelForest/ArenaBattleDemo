@@ -283,6 +283,8 @@ void AABStageGimmick::OpponentDestroyed(AActor* DestroyedActor)
 
 void AABStageGimmick::OpponentSpawn()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Spawn"));
+
 	// NPC를 생성할 위치 설정
 	const FTransform SpawnTransform(GetActorLocation() + FVector::UpVector * 88.0f);
 

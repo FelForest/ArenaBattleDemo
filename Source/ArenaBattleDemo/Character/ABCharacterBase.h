@@ -71,6 +71,11 @@ protected:
 	// 콤보 액션이 시작될 때 호출할 함수
 	void ComboActionBegin();
 
+	// NPC가 공격이 끝나는 지점을 알 수 있도록 함수 추가
+	// 어디에 필요 없다고 함
+	virtual void NotifyComboActionEnd();
+
+
 	// 콤보가 종료될 때 호출될 함수
 	// 애님 몽타주에서 제공하는 델리게이트와 파라미터 맞춤
 	void ComboActionEnd(class UAnimMontage* TargetMontage, bool IsProperlyEnded);

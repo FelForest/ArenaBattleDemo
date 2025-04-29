@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -13,5 +13,11 @@ UCLASS()
 class ARENABATTLEDEMO_API UBTTask_FindPatrolPosition : public UBTTaskNode
 {
 	GENERATED_BODY()
+
+public:
+	UBTTask_FindPatrolPosition();
+
+	// 태스크가 실행될 떄 호출되는 함수
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
 };

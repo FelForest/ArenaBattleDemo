@@ -5,6 +5,7 @@
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "AI/ABAI.h"
 
 AABAIController::AABAIController()
 {
@@ -32,6 +33,9 @@ void AABAIController::RunAI()
 	// 사용할 블랙보드 지정
 	if (UseBlackboard(BBAsset, BlackboardPtr))
 	{
+		// 시작할 때 NPC의 위치를 블랙보드에 HomePosition에 저장
+		Blackboard->SetValueAsVector(BBKEY_HOMEPOSITION, GetPawn()->GetActorLocation());
+
 		// 행동 트리 실행
 		bool RunResult = RunBehaviorTree(BTAsset);
 

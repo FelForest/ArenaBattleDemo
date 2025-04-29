@@ -34,6 +34,7 @@ protected:
 	void QuarterMove(const  FInputActionValue& Value);
 	void Attack();
 
+
 	// Camera Section
 protected:
 	UPROPERTY(VisibleAnywhere, BLueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "ture"))
