@@ -15,6 +15,9 @@ DECLARE_MULTICAST_DELEGATE(FOnHpZeroDelegate);
 // 체력 변경이 발생할 때 발행할 델리게이트.
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedDelegate, float /*CurrentHP*/);
 
+// 스탯 정보 변경이 발생할 때 발행할 델리게이트
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStatChangedDelegate, const FABCharacterStat&, const FABCharacterStat&);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ARENABATTLEDEMO_API UABCharacterStatComponent : public UActorComponent
 {
@@ -39,18 +42,28 @@ public:
 	void SetLevelStat(int32 InNewLevel);
 	FORCEINLINE float GetCurrentLevel() const { return CurrentLevel; }
 
-
-	// 부사 스탯데이터 설정 함수
-	FORCEINLINE void SetModifierStat(const FABCharacterStat& InModifierStat)
-	{
-		ModifierStat = InModifierStat;
-	}
-
 	// 전체 스탯 데이터 반환 함수
 	FORCEINLINE FABCharacterStat GetTotalStat() const
 	{
 		return BaseStat + ModifierStat;
 	}
+
+	// 기본 스탯 정보가 변경될 때 사용할 함수
+	FORCEINLINE void SetBaseStat(const FABCharacterStat& InBaseStat)
+	{
+		BaseStat = InBaseStat;
+		OnStatChanged.Broadcast(BaseStat, ModifierStat);
+	}
+
+	// 부가 스탯 정보가 변경될 때 사용할 함수
+	FORCEINLINE void SetModifierStat(const FABCharacterStat& InModifierStat)
+	{
+		ModifierStat = InModifierStat;
+		OnStatChanged.Broadcast(BaseStat, ModifierStat);
+	}
+
+	FORCEINLINE const FABCharacterStat& GetBaseStat() const { return BaseStat; }
+	FORCEINLINE const FABCharacterStat& GetModifierStat() const { return ModifierStat; }
 
 	float ApplyDamage(float InDamage);
 
@@ -65,7 +78,8 @@ public:
 	// 체력 변경 델리게이트
 	FOnHpChangedDelegate OnHpChanged;
 
-	// 스탯
+	// 스탯 변경 델리게이트
+	FOnStatChangedDelegate OnStatChanged;
 protected:
 
 	// 임시값으로 데이터 제거

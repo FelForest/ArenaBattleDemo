@@ -13,6 +13,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Character/ABCharacterControlData.h"
+#include "UI/ABHUDWidget.h"
+#include "CharacterStat/ABCharacterStatComponent.h"
 
 AABCharacterPlayer::AABCharacterPlayer()
 {
@@ -192,6 +194,24 @@ void AABCharacterPlayer::Attack()
 {
 	// 공격 입력 처리 함수 호출
 	ProcessComboCommand();
+}
+
+void AABCharacterPlayer::SetUpHUDWidget(UABHUDWidget* InHUDWidget)
+{
+	if (InHUDWidget == nullptr)
+	{
+		return;
+	}
+
+	// 스탯 정보를 UI에 전달
+	InHUDWidget->UpdateStat(Stat->GetBaseStat(), Stat->GetModifierStat());
+
+	// HP 정보 전달
+	InHUDWidget->UpdateHpBar(Stat->GetCurrentHP());
+
+	// 델리게이트에 등록.
+	Stat->OnStatChanged.AddUObject(InHUDWidget, &UABHUDWidget::UpdateStat);
+	Stat->OnHpChanged.AddUObject(InHUDWidget, &UABHUDWidget::UpdateHpBar);
 }
 
 
